@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Video Takip — Her Gün 1 Video</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- SADE ÜST BAR -->
+    <header class="header">
+      <div class="header-left">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <h1>🎬 YouTube Kanal Takip Tablosu</h1>
+          <span id="cloudStatusBadge" class="cloud-badge">☁️ Bulut Bağlanıyor...</span>
+        </div>
+        <span class="subtitle">Yayın Planı: Her Gün 1 Video • Firebase Gerçek Zamanlı Senkronize</span>
+      </div>
+      <div class="header-right">
+        <div class="default-time-box" title="Günlük varsayılan yayın saati">
+          <span>Yayın Saati:</span>
+          <input type="time" id="defaultTimeInput" value="19:00" class="inline-input" />
+        </div>
+        <button class="btn" id="autoScheduleBtn" title="Videoları bugünden başlayarak her güne 1 video düşecek şekilde sırayla tarihlendirir">
+          📅 Her Güne 1 Video Otomatik Tarihle
+        </button>
+        <button class="btn" id="exportBtn">⬇️ Yedek Al</button>
+        <label class="btn">
+          ⬆️ Yedek Yükle
+          <input type="file" id="importInput" accept=".json" hidden />
+        </label>
+        <button class="btn btn-primary" id="addVideoBtn">+ Yeni Video</button>
+      </div>
+    </header>
+
+    <!-- BÜYÜK RESİM ÖZET BAR -->
+    <section class="summary-bar" id="summaryBar"></section>
+
+    <!-- HIZLI FİLTRE SEKMELERİ -->
+    <section class="toolbar">
+      <div class="filter-pills" id="filterPills">
+        <button class="pill active" data-filter="all">Tümü</button>
+        <button class="pill" data-filter="incomplete">⏳ Eksikleri Olanlar</button>
+        <button class="pill" data-filter="missing_elevenlabs">🎙️ ElevenLabs Bekleyen</button>
+        <button class="pill" data-filter="missing_music">🎵 Müzik Bekleyen</button>
+        <button class="pill" data-filter="missing_capcut">✂️ CapCut Bekleyen</button>
+        <button class="pill" data-filter="missing_upload">📤 Yükleme Bekleyen</button>
+        <button class="pill" data-filter="done">✅ Tamamlananlar</button>
+      </div>
+      <div class="toolbar-right">
+        <input type="text" id="searchInput" class="search-input" placeholder="Video ara..." />
+      </div>
+    </section>
+
+    <!-- ANA BÜYÜK RESİM TABLOSU -->
+    <div class="table-wrapper">
+      <table class="tracker-table">
+        <thead>
+          <tr>
+            <th class="col-no">No</th>
+            <th class="col-title">Video Konusu / Başlık</th>
+            <th class="col-check">📝 Senaryo<br><small>& Görsel</small></th>
+            <th class="col-check">🎙️ ElevenLabs<br><small>Ses Hazır mı?</small></th>
+            <th class="col-check">🎵 YT Müzik<br><small>İndirildi mi?</small></th>
+            <th class="col-check">✂️ CapCut<br><small>Bitti mi?</small></th>
+            <th class="col-check">📤 YouTube<br><small>Yüklendi mi?</small></th>
+            <th class="col-date">📅 Yayın Günü & Saati<br><small>Her Gün 1 Video</small></th>
+            <th class="col-status">Durum</th>
+            <th class="col-action"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SADE DÜZENLEME / EKLEME MODALI -->
+  <div class="modal-backdrop hidden" id="videoModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Video Düzenle</h3>
+        <button class="close-btn" id="closeModalBtn">✕</button>
+      </div>
+      <form id="videoForm">
+        <input type="hidden" id="formVideoId" />
+        <div class="form-grid">
+          <div class="field">
+            <label>Video No</label>
+            <input type="number" id="formVideoNumber" required />
+          </div>
+          <div class="field">
+            <label>Kısa Dönem / Klasör</label>
+            <input type="text" id="formYearEra" placeholder="Örn: 1969 Apollo 11" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Video Başlığı</label>
+          <input type="text" id="formTitle" required />
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Yayın Günü</label>
+            <input type="date" id="formPublishDate" />
+          </div>
+          <div class="field">
+            <label>Yayın Saati</label>
+            <input type="time" id="formPublishTime" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Kısa Not (Ses dosyası, müzik adı veya hatırlatma)</label>
+          <input type="text" id="formNotes" placeholder="Örn: Müzik: Dark Drone, 4:15 reklam eklendi..." />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="deleteVideoBtn">Sil</button>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn" id="cancelModalBtn">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
