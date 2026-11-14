@@ -1,0 +1,8 @@
+# Netlify configuration for YouTube Video Takip
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
