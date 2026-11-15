@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Video Takip — Her Gün 1 Video</title>
+  <title>YouTube Çoklu Kanal & Video Takip</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,18 +15,18 @@
     <header class="header">
       <div class="header-left">
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <h1>🎬 YouTube Kanal Takip Tablosu</h1>
+          <h1>🎬 YouTube Kanal & Video Takip</h1>
           <span id="cloudStatusBadge" class="cloud-badge">☁️ Bulut Bağlanıyor...</span>
         </div>
-        <span class="subtitle">Yayın Planı: Her Gün 1 Video • Firebase Gerçek Zamanlı Senkronize</span>
+        <span class="subtitle">Çoklu Kanal Yönetimi • Her Gün 1 Video • Firebase Gerçek Zamanlı Senkronize</span>
       </div>
       <div class="header-right">
-        <div class="default-time-box" title="Günlük varsayılan yayın saati">
+        <div class="default-time-box" title="Seçili kanalın günlük varsayılan yayın saati">
           <span>Yayın Saati:</span>
           <input type="time" id="defaultTimeInput" value="19:00" class="inline-input" />
         </div>
-        <button class="btn" id="autoScheduleBtn" title="Videoları bugünden başlayarak her güne 1 video düşecek şekilde sırayla tarihlendirir">
-          📅 Her Güne 1 Video Otomatik Tarihle
+        <button class="btn" id="autoScheduleBtn" title="Seçili kanaldaki videoları bugünden başlayarak her güne 1 video düşecek şekilde sırayla tarihlendirir">
+          📅 Her Güne 1 Video Tarihle
         </button>
         <button class="btn" id="exportBtn">⬇️ Yedek Al</button>
         <label class="btn">
@@ -36,6 +36,15 @@
         <button class="btn btn-primary" id="addVideoBtn">+ Yeni Video</button>
       </div>
     </header>
+
+    <!-- ÜST KANAL SEÇİM BARI -->
+    <section class="channel-bar">
+      <div class="channel-tabs" id="channelTabs"></div>
+      <div class="channel-actions">
+        <button class="btn btn-sm" id="editChannelBtn" title="Seçili kanalın adını düzenle veya sil">⚙️ Kanalı Düzenle</button>
+        <button class="btn btn-sm btn-channel-add" id="addChannelBtn">+ Yeni Kanal Ekle</button>
+      </div>
+    </section>
 
     <!-- BÜYÜK RESİM ÖZET BAR -->
     <section class="summary-bar" id="summaryBar"></section>
@@ -78,7 +87,7 @@
     </div>
   </div>
 
-  <!-- SADE DÜZENLEME / EKLEME MODALI -->
+  <!-- VİDEO DÜZENLEME / EKLEME MODALI -->
   <div class="modal-backdrop hidden" id="videoModal">
     <div class="modal">
       <div class="modal-header">
@@ -89,13 +98,17 @@
         <input type="hidden" id="formVideoId" />
         <div class="form-grid">
           <div class="field">
+            <label>Kanal</label>
+            <select id="formChannelId" class="modal-select"></select>
+          </div>
+          <div class="field">
             <label>Video No</label>
             <input type="number" id="formVideoNumber" required />
           </div>
-          <div class="field">
-            <label>Kısa Dönem / Klasör</label>
-            <input type="text" id="formYearEra" placeholder="Örn: 1969 Apollo 11" />
-          </div>
+        </div>
+        <div class="field">
+          <label>Kısa Dönem / Klasör</label>
+          <input type="text" id="formYearEra" placeholder="Örn: 1969 Apollo 11" />
         </div>
         <div class="field">
           <label>Video Başlığı</label>
@@ -119,6 +132,34 @@
           <button type="button" class="btn btn-danger" id="deleteVideoBtn">Sil</button>
           <div style="display:flex; gap:8px;">
             <button type="button" class="btn" id="cancelModalBtn">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- KANAL EKLEME / DÜZENLEME MODALI -->
+  <div class="modal-backdrop hidden" id="channelModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="channelModalTitle">Yeni Kanal Ekle</h3>
+        <button class="close-btn" id="closeChannelModalBtn">✕</button>
+      </div>
+      <form id="channelForm">
+        <input type="hidden" id="channelFormId" />
+        <div class="field">
+          <label>Kanal Adı</label>
+          <input type="text" id="channelFormName" required placeholder="Örn: Retro Shift / 2. Kanalım" />
+        </div>
+        <div class="field">
+          <label>Varsayılan Günlük Yayın Saati</label>
+          <input type="time" id="channelFormTime" value="19:00" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="deleteChannelBtn">Kanalı Sil</button>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn" id="cancelChannelModalBtn">İptal</button>
             <button type="submit" class="btn btn-primary">Kaydet</button>
           </div>
         </div>
