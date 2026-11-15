@@ -1,8 +1,14 @@
 import { db, isFirebaseInitialized, doc, setDoc, onSnapshot } from './firebase-config.js';
 
-const STORAGE_KEY = 'retroshift_youtube_tracker_1perday_v1';
-const TIME_STORAGE_KEY = 'retroshift_youtube_default_time_v1';
+const STORAGE_KEY = 'retroshift_youtube_tracker_multichannel_v1';
+const CHANNELS_STORAGE_KEY = 'retroshift_youtube_channels_v1';
+const ACTIVE_CHANNEL_KEY = 'retroshift_youtube_active_channel_v1';
 const FIRESTORE_DOC_ID = 'youtube_video_takip';
+
+const DEFAULT_CHANNELS = [
+  { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '19:00' },
+  { id: 'ch_kanal2', name: '2. Kanalım', defaultTime: '20:00' }
+];
 
 const INITIAL_VIDEOS = [
   { number: 1, yearEra: '1975 NYC Cab Driver', title: 'What If You Were a 1970s NYC Cab Driver?', script: true, elevenlabs: true, music: true, capcut: true, youtubeUpload: true, publishStatus: 'published' },
@@ -37,10 +43,11 @@ const INITIAL_VIDEOS = [
   { number: 30, yearEra: '1962 Alcatraz Escape', title: 'What If You Were on the 1962 Alcatraz Midnight Escape Raft?', script: true, elevenlabs: false, music: false, capcut: false, youtubeUpload: false, publishStatus: 'draft' }
 ];
 
+let channels = [];
+let activeChannelId = 'ch_retroshift'; // 'all' veya kanal id
 let videos = [];
 let currentFilter = 'all';
 let searchQuery = '';
-let defaultPublishTime = '19:00';
 
 function formatYMD(d) {
   const y = d.getFullYear();
@@ -56,16 +63,45 @@ function setCloudBadge(text, stateClass) {
   badge.className = 'cloud-badge ' + (stateClass || '');
 }
 
-function loadState() {
-  const savedTime = localStorage.getItem(TIME_STORAGE_KEY);
-  if (savedTime) defaultPublishTime = savedTime;
-  const timeInput = document.getElementById('defaultTimeInput');
-  if (timeInput) timeInput.value = defaultPublishTime;
+function getActiveChannelObj() {
+  return channels.find(c => c.id === activeChannelId) || channels[0] || { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '19:00' };
+}
 
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
+function getChannelName(channelId) {
+  const ch = channels.find(c => c.id === channelId);
+  return ch ? ch.name : 'Retro Shift';
+}
+
+function ensureVideoChannels() {
+  const firstChannelId = (channels[0] && channels[0].id) || 'ch_retroshift';
+  videos.forEach(v => {
+    if (!v.channelId) v.channelId = firstChannelId;
+  });
+}
+
+function loadState() {
+  const savedChannels = localStorage.getItem(CHANNELS_STORAGE_KEY);
+  if (savedChannels) {
     try {
-      videos = JSON.parse(saved);
+      channels = JSON.parse(savedChannels);
+    } catch (e) {}
+  }
+  if (!Array.isArray(channels) || channels.length === 0) {
+    channels = [...DEFAULT_CHANNELS];
+    localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(channels));
+  }
+
+  const savedActive = localStorage.getItem(ACTIVE_CHANNEL_KEY);
+  if (savedActive && (savedActive === 'all' || channels.some(c => c.id === savedActive))) {
+    activeChannelId = savedActive;
+  } else {
+    activeChannelId = channels[0].id;
+  }
+
+  const savedVideos = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('retroshift_youtube_tracker_1perday_v1');
+  if (savedVideos) {
+    try {
+      videos = JSON.parse(savedVideos);
     } catch (e) {}
   }
 
@@ -76,6 +112,7 @@ function loadState() {
       d.setDate(d.getDate() + i);
       return {
         id: 'v_' + v.number,
+        channelId: 'ch_retroshift',
         number: v.number,
         yearEra: v.yearEra,
         title: v.title,
@@ -85,26 +122,37 @@ function loadState() {
         capcut: v.capcut,
         youtubeUpload: v.youtubeUpload,
         publishDate: formatYMD(d),
-        publishTime: defaultPublishTime,
+        publishTime: '19:00',
         publishStatus: v.publishStatus,
         notes: ''
       };
     });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
   }
+
+  ensureVideoChannels();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+  syncDefaultTimeInput();
+}
+
+function syncDefaultTimeInput() {
+  const timeInput = document.getElementById('defaultTimeInput');
+  if (!timeInput) return;
+  const ch = getActiveChannelObj();
+  timeInput.value = ch.defaultTime || '19:00';
 }
 
 async function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
-  localStorage.setItem(TIME_STORAGE_KEY, defaultPublishTime);
+  localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(channels));
+  localStorage.setItem(ACTIVE_CHANNEL_KEY, activeChannelId);
 
   if (isFirebaseInitialized && db) {
     try {
       setCloudBadge('☁️ Kaydediliyor...', 'saving');
       const docRef = doc(db, 'sync_data', FIRESTORE_DOC_ID);
       await setDoc(docRef, {
+        channels,
         videos,
-        defaultPublishTime,
         updatedAt: new Date().toISOString()
       });
       setCloudBadge('☁️ Bulut Aktif 🟢', 'online');
@@ -127,24 +175,34 @@ function initFirebaseRealtimeSync() {
     snap => {
       if (snap.exists()) {
         const data = snap.data();
+        let changed = false;
+
+        if (data && Array.isArray(data.channels) && data.channels.length > 0) {
+          if (JSON.stringify(data.channels) !== JSON.stringify(channels)) {
+            channels = data.channels;
+            localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(channels));
+            changed = true;
+          }
+        }
+
         if (data && Array.isArray(data.videos) && data.videos.length > 0) {
-          const incomingStr = JSON.stringify(data.videos);
-          const localStr = JSON.stringify(videos);
-          if (incomingStr !== localStr) {
+          if (JSON.stringify(data.videos) !== JSON.stringify(videos)) {
             videos = data.videos;
+            ensureVideoChannels();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+            changed = true;
           }
-          if (data.defaultPublishTime) {
-            defaultPublishTime = data.defaultPublishTime;
-            localStorage.setItem(TIME_STORAGE_KEY, defaultPublishTime);
-            const timeInput = document.getElementById('defaultTimeInput');
-            if (timeInput) timeInput.value = defaultPublishTime;
+        }
+
+        if (changed) {
+          if (activeChannelId !== 'all' && !channels.some(c => c.id === activeChannelId)) {
+            activeChannelId = channels[0].id;
           }
+          syncDefaultTimeInput();
           renderAll();
         }
         setCloudBadge('☁️ Bulut Aktif 🟢', 'online');
       } else {
-        // İlk kez açılıyorsa mevcut başlangıç verisini buluta yaz
         saveState();
       }
     },
@@ -155,33 +213,74 @@ function initFirebaseRealtimeSync() {
   );
 }
 
+function getChannelVideos() {
+  if (activeChannelId === 'all') return videos;
+  return videos.filter(v => v.channelId === activeChannelId);
+}
+
 function isRowDone(v) {
   return v.script && v.elevenlabs && v.music && v.capcut && v.youtubeUpload;
 }
 
+function renderChannelBar() {
+  const container = document.getElementById('channelTabs');
+  const editBtn = document.getElementById('editChannelBtn');
+
+  const tabsHtml = channels.map(ch => {
+    const count = videos.filter(v => v.channelId === ch.id).length;
+    const isActive = activeChannelId === ch.id;
+    return `
+      <button type="button" class="channel-tab ${isActive ? 'active' : ''}" onclick="selectChannel('${ch.id}')">
+        <span>📺 ${escapeHtml(ch.name)}</span>
+        <span class="channel-count">${count}</span>
+      </button>
+    `;
+  }).join('');
+
+  const allTabHtml = `
+    <button type="button" class="channel-tab ${activeChannelId === 'all' ? 'active' : ''}" onclick="selectChannel('all')">
+      <span>🌐 Tüm Kanallar</span>
+      <span class="channel-count">${videos.length}</span>
+    </button>
+  `;
+
+  container.innerHTML = tabsHtml + allTabHtml;
+  if (editBtn) {
+    editBtn.style.display = activeChannelId === 'all' ? 'none' : 'inline-flex';
+  }
+}
+
+window.selectChannel = function(channelId) {
+  activeChannelId = channelId;
+  localStorage.setItem(ACTIVE_CHANNEL_KEY, activeChannelId);
+  syncDefaultTimeInput();
+  renderAll();
+};
+
 function renderSummary() {
-  const total = videos.length;
-  const eleven = videos.filter(v => v.elevenlabs).length;
-  const music = videos.filter(v => v.music).length;
-  const capcut = videos.filter(v => v.capcut).length;
-  const uploaded = videos.filter(v => v.youtubeUpload).length;
+  const list = getChannelVideos();
+  const total = list.length;
+  const eleven = list.filter(v => v.elevenlabs).length;
+  const music = list.filter(v => v.music).length;
+  const capcut = list.filter(v => v.capcut).length;
+  const uploaded = list.filter(v => v.youtubeUpload).length;
 
   document.getElementById('summaryBar').innerHTML = `
     <div class="sum-box">
-      <span class="sum-label">🎬 Toplam Video</span>
+      <span class="sum-label">🎬 Kanal Video Sayısı</span>
       <span class="sum-val">${total}</span>
     </div>
     <div class="sum-box">
       <span class="sum-label">🎙️ ElevenLabs Hazır</span>
-      <span class="sum-val" style="color:${eleven === total ? '#34d399' : '#fbbf24'}">${eleven} / ${total}</span>
+      <span class="sum-val" style="color:${eleven === total && total > 0 ? '#34d399' : '#fbbf24'}">${eleven} / ${total}</span>
     </div>
     <div class="sum-box">
       <span class="sum-label">🎵 Müzik İndirilen</span>
-      <span class="sum-val" style="color:${music === total ? '#34d399' : '#fbbf24'}">${music} / ${total}</span>
+      <span class="sum-val" style="color:${music === total && total > 0 ? '#34d399' : '#fbbf24'}">${music} / ${total}</span>
     </div>
     <div class="sum-box">
       <span class="sum-label">✂️ CapCut Biten</span>
-      <span class="sum-val" style="color:${capcut === total ? '#34d399' : '#fbbf24'}">${capcut} / ${total}</span>
+      <span class="sum-val" style="color:${capcut === total && total > 0 ? '#34d399' : '#fbbf24'}">${capcut} / ${total}</span>
     </div>
     <div class="sum-box">
       <span class="sum-label">📤 YT Yüklenen (Stok)</span>
@@ -192,11 +291,13 @@ function renderSummary() {
 
 function renderTable() {
   const tbody = document.getElementById('tableBody');
-  const filtered = videos
+  const baseList = getChannelVideos();
+
+  const filtered = baseList
     .filter(v => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        if (!`${v.number} ${v.title} ${v.yearEra} ${v.notes}`.toLowerCase().includes(q)) return false;
+        if (!`${v.number} ${v.title} ${v.yearEra} ${v.notes} ${getChannelName(v.channelId)}`.toLowerCase().includes(q)) return false;
       }
       if (currentFilter === 'incomplete') return !isRowDone(v);
       if (currentFilter === 'missing_elevenlabs') return !v.elevenlabs;
@@ -209,18 +310,26 @@ function renderTable() {
     .sort((a, b) => a.number - b.number);
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:28px; color:#94a3b8;">Bu filtrede video yok.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" style="text-align:center; padding:32px; color:#94a3b8;">
+          Bu kanalda veya filtrede henüz video yok. Sağ üstteki <strong>"+ Yeni Video"</strong> butonundan ekleyebilirsiniz.
+        </td>
+      </tr>
+    `;
     return;
   }
 
   tbody.innerHTML = filtered.map(v => {
     const done = isRowDone(v);
+    const showChannelBadge = activeChannelId === 'all';
     return `
       <tr class="${done ? 'row-done' : ''}">
         <td class="col-no">#${v.number}</td>
         <td class="col-title">
           <div class="video-main-title">${escapeHtml(v.title)}</div>
           <div class="video-sub-info">
+            ${showChannelBadge ? `<span class="channel-inline-badge">📺 ${escapeHtml(getChannelName(v.channelId))}</span>` : ''}
             <span>📁 ${escapeHtml(v.yearEra)}</span>
             ${v.notes ? `<span class="note-inline">📌 ${escapeHtml(v.notes)}</span>` : ''}
           </div>
@@ -281,18 +390,30 @@ window.updateField = function(id, field, val) {
   saveState();
 };
 
+function populateChannelSelect(selectedId) {
+  const sel = document.getElementById('formChannelId');
+  sel.innerHTML = channels.map(ch => `
+    <option value="${ch.id}" ${ch.id === selectedId ? 'selected' : ''}>📺 ${escapeHtml(ch.name)}</option>
+  `).join('');
+}
+
 window.openModal = function(id) {
   const modal = document.getElementById('videoModal');
   const delBtn = document.getElementById('deleteVideoBtn');
+  const targetChId = activeChannelId === 'all' ? channels[0].id : activeChannelId;
+  const chObj = channels.find(c => c.id === targetChId) || channels[0];
+
   if (!id) {
-    const nextNo = videos.length ? Math.max(...videos.map(v => v.number)) + 1 : 1;
+    const chVids = videos.filter(v => v.channelId === targetChId);
+    const nextNo = chVids.length ? Math.max(...chVids.map(v => v.number)) + 1 : 1;
     document.getElementById('modalTitle').textContent = 'Yeni Video Ekle';
     document.getElementById('formVideoId').value = '';
+    populateChannelSelect(targetChId);
     document.getElementById('formVideoNumber').value = nextNo;
     document.getElementById('formYearEra').value = '';
     document.getElementById('formTitle').value = '';
     document.getElementById('formPublishDate').value = formatYMD(new Date());
-    document.getElementById('formPublishTime').value = defaultPublishTime;
+    document.getElementById('formPublishTime').value = chObj.defaultTime || '19:00';
     document.getElementById('formNotes').value = '';
     delBtn.style.display = 'none';
   } else {
@@ -300,11 +421,12 @@ window.openModal = function(id) {
     if (!v) return;
     document.getElementById('modalTitle').textContent = `Video #${v.number} Düzenle`;
     document.getElementById('formVideoId').value = v.id;
+    populateChannelSelect(v.channelId || targetChId);
     document.getElementById('formVideoNumber').value = v.number;
     document.getElementById('formYearEra').value = v.yearEra || '';
     document.getElementById('formTitle').value = v.title || '';
     document.getElementById('formPublishDate').value = v.publishDate || '';
-    document.getElementById('formPublishTime').value = v.publishTime || defaultPublishTime;
+    document.getElementById('formPublishTime').value = v.publishTime || '19:00';
     document.getElementById('formNotes').value = v.notes || '';
     delBtn.style.display = 'inline-flex';
   }
@@ -315,11 +437,36 @@ function closeModal() {
   document.getElementById('videoModal').classList.add('hidden');
 }
 
+function openChannelModal(isEdit) {
+  const modal = document.getElementById('channelModal');
+  const delBtn = document.getElementById('deleteChannelBtn');
+  if (isEdit && activeChannelId !== 'all') {
+    const ch = getActiveChannelObj();
+    document.getElementById('channelModalTitle').textContent = 'Kanalı Düzenle';
+    document.getElementById('channelFormId').value = ch.id;
+    document.getElementById('channelFormName').value = ch.name;
+    document.getElementById('channelFormTime').value = ch.defaultTime || '19:00';
+    delBtn.style.display = channels.length > 1 ? 'inline-flex' : 'none';
+  } else {
+    document.getElementById('channelModalTitle').textContent = 'Yeni Kanal Ekle';
+    document.getElementById('channelFormId').value = '';
+    document.getElementById('channelFormName').value = '';
+    document.getElementById('channelFormTime').value = '19:00';
+    delBtn.style.display = 'none';
+  }
+  modal.classList.remove('hidden');
+}
+
+function closeChannelModal() {
+  document.getElementById('channelModal').classList.add('hidden');
+}
+
 function escapeHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function renderAll() {
+  renderChannelBar();
   renderSummary();
   renderTable();
 }
@@ -344,23 +491,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('defaultTimeInput').addEventListener('change', e => {
-    defaultPublishTime = e.target.value || '19:00';
+    const val = e.target.value || '19:00';
+    const ch = getActiveChannelObj();
+    if (ch) ch.defaultTime = val;
     saveState();
   });
 
   document.getElementById('autoScheduleBtn').addEventListener('click', () => {
-    const sorted = [...videos].sort((a, b) => a.number - b.number);
+    const ch = getActiveChannelObj();
+    const targetTime = (ch && ch.defaultTime) || document.getElementById('defaultTimeInput').value || '19:00';
+    const targetList = getChannelVideos().sort((a, b) => a.number - b.number);
     const start = new Date();
-    sorted.forEach((v, idx) => {
+    targetList.forEach((v, idx) => {
       const d = new Date(start);
       d.setDate(d.getDate() + idx);
       v.publishDate = formatYMD(d);
-      v.publishTime = defaultPublishTime;
+      v.publishTime = targetTime;
     });
     renderAll();
     saveState();
   });
 
+  // Video Modal Events
   document.getElementById('addVideoBtn').addEventListener('click', () => openModal(null));
   document.getElementById('closeModalBtn').addEventListener('click', closeModal);
   document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
@@ -368,6 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('videoForm').addEventListener('submit', e => {
     e.preventDefault();
     const id = document.getElementById('formVideoId').value;
+    const channelId = document.getElementById('formChannelId').value;
     const number = Number(document.getElementById('formVideoNumber').value) || 1;
     const yearEra = document.getElementById('formYearEra').value.trim();
     const title = document.getElementById('formTitle').value.trim();
@@ -377,10 +530,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (id) {
       const v = videos.find(x => x.id === id);
-      if (v) Object.assign(v, { number, yearEra, title, publishDate, publishTime, notes });
+      if (v) Object.assign(v, { channelId, number, yearEra, title, publishDate, publishTime, notes });
     } else {
       videos.push({
         id: 'v_' + Date.now(),
+        channelId,
         number,
         yearEra,
         title,
@@ -408,8 +562,51 @@ document.addEventListener('DOMContentLoaded', () => {
     saveState();
   });
 
+  // Channel Modal Events
+  document.getElementById('addChannelBtn').addEventListener('click', () => openChannelModal(false));
+  document.getElementById('editChannelBtn').addEventListener('click', () => openChannelModal(true));
+  document.getElementById('closeChannelModalBtn').addEventListener('click', closeChannelModal);
+  document.getElementById('cancelChannelModalBtn').addEventListener('click', closeChannelModal);
+
+  document.getElementById('channelForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = document.getElementById('channelFormId').value;
+    const name = document.getElementById('channelFormName').value.trim();
+    const defaultTime = document.getElementById('channelFormTime').value || '19:00';
+    if (!name) return;
+
+    if (id) {
+      const ch = channels.find(c => c.id === id);
+      if (ch) {
+        ch.name = name;
+        ch.defaultTime = defaultTime;
+      }
+    } else {
+      const newId = 'ch_' + Date.now();
+      channels.push({ id: newId, name, defaultTime });
+      activeChannelId = newId;
+    }
+    syncDefaultTimeInput();
+    closeChannelModal();
+    renderAll();
+    saveState();
+  });
+
+  document.getElementById('deleteChannelBtn').addEventListener('click', () => {
+    const id = document.getElementById('channelFormId').value;
+    if (!id || channels.length <= 1) return;
+    channels = channels.filter(c => c.id !== id);
+    videos = videos.filter(v => v.channelId !== id);
+    activeChannelId = channels[0].id;
+    syncDefaultTimeInput();
+    closeChannelModal();
+    renderAll();
+    saveState();
+  });
+
+  // Export & Import
   document.getElementById('exportBtn').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(videos, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ channels, videos }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `youtube-takip-${formatYMD(new Date())}.json`;
@@ -425,9 +622,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const parsed = JSON.parse(ev.target.result);
         if (Array.isArray(parsed)) {
           videos = parsed;
-          renderAll();
-          saveState();
+          ensureVideoChannels();
+        } else if (parsed && Array.isArray(parsed.videos)) {
+          if (Array.isArray(parsed.channels) && parsed.channels.length > 0) {
+            channels = parsed.channels;
+          }
+          videos = parsed.videos;
+          ensureVideoChannels();
         }
+        renderAll();
+        saveState();
       } catch (err) {}
     };
     r.readAsText(f);
