@@ -7,7 +7,7 @@ const FIRESTORE_DOC_ID = 'youtube_video_takip';
 
 const DEFAULT_CHANNELS = [
   { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '03:00' },
-  { id: 'ch_kanal2', name: '2. Kanalım', defaultTime: '20:00' }
+  { id: 'ch_kanal2', name: 'akte_vergange', defaultTime: '19:00' }
 ];
 
 const INITIAL_VIDEOS_1_TO_30 = [
@@ -43,7 +43,7 @@ const INITIAL_VIDEOS_1_TO_30 = [
   { number: 30, yearEra: '1962 Alcatraz Escape', title: 'What If You Were on the 1962 Alcatraz Midnight Escape Raft?', script: true, images: true, elevenlabs: false, music: false, capcut: false, youtubeUpload: false, publishStatus: 'draft' }
 ];
 
-// 31'den 65'e kadar videolar: 31. video 17.11.2026'da başlayıp her gün 1 video (Saat 03:00), Senaryo ve Görseller Tamam
+// Retro Shift 31'den 65'e kadar videolar: 31. video 17.11.2026'da başlayıp her gün 1 video (Saat 03:00), Senaryo ve Görseller Tamam
 const VIDEOS_31_TO_65 = [
   { number: 31, publishDate: '2026-11-17', yearEra: '1773 Boston Tea Party / Video31_1773_BostonTeaParty', title: 'What If You Were on the Docks During the 1773 Boston Tea Party?' },
   { number: 32, publishDate: '2026-11-18', yearEra: '1863 Gettysburg Surgeon / Video32_1863_GettysburgSurgeon', title: "What Was a Union Field Hospital Surgeon's 24-Hour Shift at Gettysburg?" },
@@ -82,6 +82,94 @@ const VIDEOS_31_TO_65 = [
   { number: 65, publishDate: '2026-12-21', yearEra: '1899 Paris Moulin Rouge / Video65_1899_ParisMoulinRouge', title: 'What Was It Like Working Backstage at the Moulin Rouge in 1899 Paris?' }
 ];
 
+// akte_vergange kanalı 7'den 20'ye kadar videolar: 6. video 13.12.2026 Pazar 19:00'da olduğu için 7. video 20.12.2026 Pazar 19:00'dan itibaren her Pazar 19:00
+const AKTE_VIDEOS_7_TO_20 = [
+  {
+    number: 7,
+    publishDate: '2026-12-20',
+    yearEra: 'Voynich El Yazması: Hiçbir Bilgisayarın Çözemediği Kitap',
+    title: 'Das Voynich-Manuskript: Das Buch, das kein Computer entschlüsseln kann'
+  },
+  {
+    number: 8,
+    publishDate: '2026-12-27',
+    yearEra: 'Roanoke Kolonisinin Kayboluşu: 115 İnsan Nereye Gitti?',
+    title: 'Das Verschwinden der Kolonie Roanoke: Wohin gingen 115 Menschen?'
+  },
+  {
+    number: 9,
+    publishDate: '2027-01-03',
+    yearEra: 'Aslında Var Olmaması Gereken 5 Arkeolojik Buluntu',
+    title: '5 archäologische Funde, die es eigentlich nicht geben dürfte'
+  },
+  {
+    number: 10,
+    publishDate: '2027-01-10',
+    yearEra: "Göbeklitepe'nin Sırrı: Dünyanın İlk Tapınağını Kim İnşa Etti?",
+    title: 'Das Geheimnis von Göbeklitepe: Wer baute den ersten Tempel der Welt?'
+  },
+  {
+    number: 11,
+    publishDate: '2027-01-17',
+    yearEra: '1518 Dans Vebası: Yüzlerce İnsan Neden Ölünceye Kadar Dans Etti?',
+    title: 'Die Tanzplage von 1518: Warum tanzten Hunderte Menschen bis zum Tod?'
+  },
+  {
+    number: 12,
+    publishDate: '2027-01-24',
+    yearEra: 'Stanford Hapishane Deneyi: İyi İnsanlar Ne Kadar Hızlı Kötüleşir?',
+    title: 'Das Stanford-Gefängnis-Experiment: Wie schnell gute Menschen böse werden'
+  },
+  {
+    number: 13,
+    publishDate: '2027-01-31',
+    yearEra: 'Tapınak Şövalyelerinin Yükselişi ve Çöküşü',
+    title: 'Der Aufstieg und Fall der Tempelritter: Die Geheimorganisation'
+  },
+  {
+    number: 14,
+    publishDate: '2027-02-07',
+    yearEra: 'Cadı Avının Psikolojisi: Korku Bütün Şehirleri Nasıl Yok Etti?',
+    title: 'Die Psychologie der Hexenjagd: Wie Angst ganze Städte zerstörte'
+  },
+  {
+    number: 15,
+    publishDate: '2027-02-14',
+    yearEra: 'Yazsız Yıl 1816: Bir Yanardağ Dünyayı Nasıl Açlığa Sürükledi?',
+    title: 'Das Jahr ohne Sommer (1816): Als die Welt fast verhungerte'
+  },
+  {
+    number: 16,
+    publishDate: '2027-02-21',
+    yearEra: "Pompeii'nin Son 24 Saati: Taşlaşmış Bedenler Ne Anlatıyor?",
+    title: 'Die letzten 24 Stunden von Pompeji: Was die Versteinerten verraten'
+  },
+  {
+    number: 17,
+    publishDate: '2027-02-28',
+    yearEra: 'Tunç Çağı Çöküşü: Tüm Medeniyetler Aynı Anda Nasıl Yok Oldu?',
+    title: 'Der Zusammenbruch der Bronzezeit: Als alle Zivilisationen untergingen'
+  },
+  {
+    number: 18,
+    publishDate: '2027-03-07',
+    yearEra: "Paskalya Adası'nın Yasak Tarihi: Orada Gerçekten Ne Oldu?",
+    title: 'Die verbotene Geschichte der Osterinsel: Was passierte wirklich?'
+  },
+  {
+    number: 19,
+    publishDate: '2027-03-14',
+    yearEra: 'Çernobil: Patlamadan Sonraki İlk 60 Dakika',
+    title: 'Tschernobyl: Die ersten 60 Minuten nach der Explosion'
+  },
+  {
+    number: 20,
+    publishDate: '2027-03-21',
+    yearEra: "Paris'in Unutulmuş Yeraltı Mezarları: 6 Milyon Ölünün İmparatorluğu",
+    title: 'Die vergessenen Katakomben von Paris: Das Reich der 6 Millionen Toten'
+  }
+];
+
 let channels = [];
 let activeChannelId = 'ch_retroshift';
 let videos = [];
@@ -111,10 +199,20 @@ function getChannelName(channelId) {
   return ch ? ch.name : 'Retro Shift';
 }
 
-// 1-30 arasındaki mevcut kullanıcı verilerini korur, 31-65 arasındaki videolar eksikse ekler
-function ensureVideoFieldsAndBatch31To65() {
+// Mevcut kullanıcı verilerini korur, Retro Shift 31-65 ve akte_vergange 7-20 eksikse ekler
+function ensureVideoFieldsAndBatches() {
   const retroChannel = channels.find(c => c.name.toLowerCase().includes('retro')) || channels[0] || { id: 'ch_retroshift' };
   const retroChannelId = retroChannel.id;
+
+  let akteChannel = channels.find(c => c.name.toLowerCase().includes('akte') || c.name.toLowerCase().includes('vergang'));
+  if (!akteChannel) {
+    akteChannel = channels.find(c => c.id !== retroChannelId);
+  }
+  if (!akteChannel) {
+    akteChannel = { id: 'ch_kanal2', name: 'akte_vergange', defaultTime: '19:00' };
+    channels.push(akteChannel);
+  }
+  const akteChannelId = akteChannel.id;
 
   let addedNewBatch = false;
 
@@ -123,11 +221,12 @@ function ensureVideoFieldsAndBatch31To65() {
     if (typeof v.images !== 'boolean') v.images = !!v.script;
   });
 
+  // Retro Shift 31-65 kontrolü
   VIDEOS_31_TO_65.forEach(item => {
     const existing = videos.find(v => v.channelId === retroChannelId && Number(v.number) === item.number);
     if (!existing) {
       videos.push({
-        id: 'v_' + item.number,
+        id: 'v_retro_' + item.number,
         channelId: retroChannelId,
         number: item.number,
         yearEra: item.yearEra,
@@ -140,6 +239,31 @@ function ensureVideoFieldsAndBatch31To65() {
         youtubeUpload: false,
         publishDate: item.publishDate,
         publishTime: '03:00',
+        publishStatus: 'draft',
+        notes: ''
+      });
+      addedNewBatch = true;
+    }
+  });
+
+  // akte_vergange 7-20 kontrolü (Her Pazar 19:00, Kısa dönem kısmında Türkçe konu başlığı)
+  AKTE_VIDEOS_7_TO_20.forEach(item => {
+    const existing = videos.find(v => v.channelId === akteChannelId && Number(v.number) === item.number);
+    if (!existing) {
+      videos.push({
+        id: 'v_akte_' + item.number,
+        channelId: akteChannelId,
+        number: item.number,
+        yearEra: item.yearEra,
+        title: item.title,
+        script: true,
+        images: false,
+        elevenlabs: false,
+        music: false,
+        capcut: false,
+        youtubeUpload: false,
+        publishDate: item.publishDate,
+        publishTime: '19:00',
         publishStatus: 'draft',
         notes: ''
       });
@@ -201,7 +325,7 @@ function loadState() {
     });
   }
 
-  ensureVideoFieldsAndBatch31To65();
+  ensureVideoFieldsAndBatches();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
   syncDefaultTimeInput();
 }
@@ -259,11 +383,10 @@ function initFirebaseRealtimeSync() {
 
         if (data && Array.isArray(data.videos) && data.videos.length > 0) {
           videos = data.videos;
-          const addedBatch = ensureVideoFieldsAndBatch31To65();
+          const addedBatch = ensureVideoFieldsAndBatches();
           localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
           changed = true;
           if (addedBatch) {
-            // Kullanıcının 1-30 arası güncel bulut verilerinin üzerine 31-65 eklendi, buluta geri kaydet
             saveState();
           }
         }
@@ -362,8 +485,8 @@ function renderSummary() {
       <span class="sum-val" style="color:${capcut === total && total > 0 ? '#34d399' : '#fbbf24'}">${capcut} / ${total}</span>
     </div>
     <div class="sum-box">
-      <span class="sum-label">📤 YT Yüklenen (Stok)</span>
-      <span class="sum-val" style="color:#60a5fa">${uploaded} <small style="font-size:0.75rem; font-weight:500; color:#94a3b8;">(${uploaded} Günlük)</small></span>
+      <span class="sum-label">📤 YT Yüklenen</span>
+      <span class="sum-val" style="color:#60a5fa">${uploaded} / ${total}</span>
     </div>
   `;
 }
@@ -704,13 +827,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const parsed = JSON.parse(ev.target.result);
         if (Array.isArray(parsed)) {
           videos = parsed;
-          ensureVideoFieldsAndBatch31To65();
+          ensureVideoFieldsAndBatches();
         } else if (parsed && Array.isArray(parsed.videos)) {
           if (Array.isArray(parsed.channels) && parsed.channels.length > 0) {
             channels = parsed.channels;
           }
           videos = parsed.videos;
-          ensureVideoFieldsAndBatch31To65();
+          ensureVideoFieldsAndBatches();
         }
         renderAll();
         saveState();
