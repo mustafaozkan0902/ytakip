@@ -6,11 +6,11 @@ const ACTIVE_CHANNEL_KEY = 'retroshift_youtube_active_channel_v1';
 const FIRESTORE_DOC_ID = 'youtube_video_takip';
 
 const DEFAULT_CHANNELS = [
-  { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '19:00' },
+  { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '03:00' },
   { id: 'ch_kanal2', name: '2. Kanalım', defaultTime: '20:00' }
 ];
 
-const INITIAL_VIDEOS = [
+const INITIAL_VIDEOS_1_TO_30 = [
   { number: 1, yearEra: '1975 NYC Cab Driver', title: 'What If You Were a 1970s NYC Cab Driver?', script: true, images: true, elevenlabs: true, music: true, capcut: true, youtubeUpload: true, publishStatus: 'published' },
   { number: 2, yearEra: '1968 Detroit Auto', title: 'What Was a 1968 Detroit Auto Shift Really Like?', script: true, images: true, elevenlabs: true, music: true, capcut: true, youtubeUpload: true, publishStatus: 'published' },
   { number: 3, yearEra: '1985 Wall Street', title: 'What If You Were a 1980s Wall Street Junior Broker?', script: true, images: true, elevenlabs: true, music: true, capcut: false, youtubeUpload: false, publishStatus: 'draft' },
@@ -43,6 +43,45 @@ const INITIAL_VIDEOS = [
   { number: 30, yearEra: '1962 Alcatraz Escape', title: 'What If You Were on the 1962 Alcatraz Midnight Escape Raft?', script: true, images: true, elevenlabs: false, music: false, capcut: false, youtubeUpload: false, publishStatus: 'draft' }
 ];
 
+// 31'den 65'e kadar videolar: 31. video 17.11.2026'da başlayıp her gün 1 video (Saat 03:00), Senaryo ve Görseller Tamam
+const VIDEOS_31_TO_65 = [
+  { number: 31, publishDate: '2026-11-17', yearEra: '1773 Boston Tea Party / Video31_1773_BostonTeaParty', title: 'What If You Were on the Docks During the 1773 Boston Tea Party?' },
+  { number: 32, publishDate: '2026-11-18', yearEra: '1863 Gettysburg Surgeon / Video32_1863_GettysburgSurgeon', title: "What Was a Union Field Hospital Surgeon's 24-Hour Shift at Gettysburg?" },
+  { number: 33, publishDate: '2026-11-19', yearEra: '1937 Hindenburg Disaster / Video33_1937_HindenburgDisaster', title: 'What If You Were a Rigger Inside the 1937 Hindenburg Disaster?' },
+  { number: 34, publishDate: '2026-11-20', yearEra: '1588 Armada Fire Ship / Video34_1588_ArmadaFireShip', title: 'What It Was Like Aboard an English Galleon Fighting the Spanish Armada' },
+  { number: 35, publishDate: '2026-11-21', yearEra: '1980 Mount St. Helens / Video35_1980_MountStHelens', title: 'What If You Were at Mount St. Helens on the Morning of May 18, 1980?' },
+  { number: 36, publishDate: '2026-11-22', yearEra: '1934 Hoover Dam High Scaler / Video36_1934_HooverDamHighScaler', title: 'What If You Were a Hoover Dam "High Scaler" Hanging by a Rope?' },
+  { number: 37, publishDate: '2026-11-23', yearEra: '1871 Great Chicago Fire / Video37_1871_GreatChicagoFire', title: 'What If You Were on Duty When the 1871 Great Chicago Fire Broke Out?' },
+  { number: 38, publishDate: '2026-11-24', yearEra: '1940 London Blitz Warden / Video38_1940_LondonBlitzWarden', title: 'What Was a Night Shift as a 1940 London Blitz Air Raid Warden?' },
+  { number: 39, publishDate: '2026-11-25', yearEra: '1881 Tombstone O.K. Corral / Video39_1881_TombstoneOKCorral', title: 'What Was It Like as a Stable Hand During the O.K. Corral Shootout?' },
+  { number: 40, publishDate: '2026-11-26', yearEra: '1889 Johnstown Flood / Video40_1889_JohnstownFlood', title: "What Was the Telegraph Operator's Shift When the Johnstown Dam Broke?" },
+  { number: 41, publishDate: '2026-11-27', yearEra: '1911 Triangle Shirtwaist Fire / Video41_1911_TriangleShirtwaistFire', title: 'What Was It Like Inside the 1911 Triangle Shirtwaist Factory Shift?' },
+  { number: 42, publishDate: '2026-11-28', yearEra: '1895 Chicago Meatpacking / Video42_1895_ChicagoMeatpacking', title: "What Was a Shift in Upton Sinclair's 1895 Chicago Meatpacking Stockyards?" },
+  { number: 43, publishDate: '2026-11-29', yearEra: '1854 Crimean War Scutari / Video43_1854_CrimeanWarScutari', title: 'What If You Worked as an Orderly Under Florence Nightingale in Scutari?' },
+  { number: 44, publishDate: '2026-11-30', yearEra: '1846 Donner Party Pioneer / Video44_1846_DonnerPartyPioneer', title: 'What Was It Like Trapped in the Sierra Nevada Snow with the Donner Party?' },
+  { number: 45, publishDate: '2026-12-01', yearEra: '1970 Apollo 13 Rescue / Video45_1970_Apollo13Rescue', title: 'What If You Were an Engineer in Houston During the Apollo 13 Rescue?' },
+  { number: 46, publishDate: '2026-12-02', yearEra: '1941 Pearl Harbor Gunner / Video46_1941_PearlHarborGunner', title: "What Was a Machine Gunner's Shift on the USS West Virginia at Pearl Harbor?" },
+  { number: 47, publishDate: '2026-12-03', yearEra: '1935 Dust Bowl Black Sunday / Video47_1935_DustBowlBlackSunday', title: 'What Was It ACTUALLY Like on an Oklahoma Dust Bowl Farm on Black Sunday?' },
+  { number: 48, publishDate: '2026-12-04', yearEra: '1925 Nome Serum Run / Video48_1925_NomeSerumRun', title: "What Was a Dog Sled Musher's Shift on the 1925 Serum Run to Nome?" },
+  { number: 49, publishDate: '2026-12-05', yearEra: '1943 Bletchley Park Enigma / Video49_1943_BletchleyParkEnigma', title: 'What If You Were a Codebreaker Operating the Enigma Bombe at Bletchley Park?' },
+  { number: 50, publishDate: '2026-12-06', yearEra: '79 AD Pompeii Fleet Evacuation / Video50_79AD_PompeiiFleetEvacuation', title: 'What If You Were a Roman Sailor Evacuating Pompeii During Mount Vesuvius?' },
+  { number: 51, publishDate: '2026-12-07', yearEra: '1945 Okinawa Kamikaze Radar / Video51_1945_OkinawaKamikazeRadar', title: 'What Was It Like in a US Navy Destroyer Radar Room Under Kamikaze Attack?' },
+  { number: 52, publishDate: '2026-12-08', yearEra: '1923 Prohibition Rum Runner / Video52_1923_ProhibitionRumRunner', title: 'What Was a Shift as a 1923 Prohibition Rum-Runner Speedboat Pilot?' },
+  { number: 53, publishDate: '2026-12-09', yearEra: '1885 Paris Sewer Inspector / Video53_1885_ParisSewerInspector', title: 'What If You Were a Paris Sewer Inspector Beneath the Victorian Boulevards?' },
+  { number: 54, publishDate: '2026-12-10', yearEra: '1948 Berlin Airlift Pilot / Video54_1948_BerlinAirliftPilot', title: "What Was a Cargo Pilot's 24-Hour Shift in the 1948 Berlin Airlift?" },
+  { number: 55, publishDate: '2026-12-11', yearEra: '1850 Victorian Coal Mine Trapper / Video55_1850_VictorianCoalMineTrapper', title: 'What It Was Like as a Child Coal Mine "Trapper" in Victorian Britain' },
+  { number: 56, publishDate: '2026-12-12', yearEra: '1955 Nevada Atomic Test / Video56_1955_NevadaAtomicTest', title: 'What If You Were a Soldier in the Trenches During a 1955 Atomic Bomb Test?' },
+  { number: 57, publishDate: '2026-12-13', yearEra: '1927 Lindbergh Transatlantic / Video57_1927_LindberghTransatlantic', title: "What Was Charles Lindbergh's 33-Hour Solo Transatlantic Cockpit Shift?" },
+  { number: 58, publishDate: '2026-12-14', yearEra: '1989 Berlin Wall Fall / Video58_1989_BerlinWallFall', title: 'What If You Guarded the Berlin Wall the Night It Fell? (Nov 9, 1989)' },
+  { number: 59, publishDate: '2026-12-15', yearEra: '1962 Cuban Missile Crisis U-2 / Video59_1962_CubanMissileCrisisU2', title: "What Was a U-2 Spy Plane Pilot's Shift Flying Over Cuba in 1962?" },
+  { number: 60, publishDate: '2026-12-16', yearEra: '1982 North Sea Saturation Diver / Video60_1982_NorthSeaSaturationDiver', title: 'What It Was ACTUALLY Like as a 1982 North Sea Deep Saturation Diver' },
+  { number: 61, publishDate: '2026-12-17', yearEra: '1974 Formula 1 Mechanic / Video61_1974_Formula1Mechanic', title: "What Was a Ferrari Pit Mechanic's Shift in the Deadliest Era of F1?" },
+  { number: 62, publishDate: '2026-12-18', yearEra: '1973 Alaska Pipeline Welder / Video62_1973_AlaskaPipelineWelder', title: 'What Was It Like Building the Trans-Alaska Pipeline in -50°F Winter?' },
+  { number: 63, publishDate: '2026-12-19', yearEra: '1942 Midway Torpedo Gunner / Video63_1942_MidwayTorpedoGunner', title: "What Was a Torpedo Bomber Gunner's Shift at the Battle of Midway?" },
+  { number: 64, publishDate: '2026-12-20', yearEra: '1979 Three Mile Island Meltdown / Video64_1979_ThreeMileIslandMeltdown', title: "What Was the Nuclear Control Operator's Shift During Three Mile Island?" },
+  { number: 65, publishDate: '2026-12-21', yearEra: '1899 Paris Moulin Rouge / Video65_1899_ParisMoulinRouge', title: 'What Was It Like Working Backstage at the Moulin Rouge in 1899 Paris?' }
+];
+
 let channels = [];
 let activeChannelId = 'ch_retroshift';
 let videos = [];
@@ -64,7 +103,7 @@ function setCloudBadge(text, stateClass) {
 }
 
 function getActiveChannelObj() {
-  return channels.find(c => c.id === activeChannelId) || channels[0] || { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '19:00' };
+  return channels.find(c => c.id === activeChannelId) || channels[0] || { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '03:00' };
 }
 
 function getChannelName(channelId) {
@@ -72,12 +111,43 @@ function getChannelName(channelId) {
   return ch ? ch.name : 'Retro Shift';
 }
 
-function ensureVideoFields() {
-  const firstChannelId = (channels[0] && channels[0].id) || 'ch_retroshift';
+// 1-30 arasındaki mevcut kullanıcı verilerini korur, 31-65 arasındaki videolar eksikse ekler
+function ensureVideoFieldsAndBatch31To65() {
+  const retroChannel = channels.find(c => c.name.toLowerCase().includes('retro')) || channels[0] || { id: 'ch_retroshift' };
+  const retroChannelId = retroChannel.id;
+
+  let addedNewBatch = false;
+
   videos.forEach(v => {
-    if (!v.channelId) v.channelId = firstChannelId;
+    if (!v.channelId) v.channelId = retroChannelId;
     if (typeof v.images !== 'boolean') v.images = !!v.script;
   });
+
+  VIDEOS_31_TO_65.forEach(item => {
+    const existing = videos.find(v => v.channelId === retroChannelId && Number(v.number) === item.number);
+    if (!existing) {
+      videos.push({
+        id: 'v_' + item.number,
+        channelId: retroChannelId,
+        number: item.number,
+        yearEra: item.yearEra,
+        title: item.title,
+        script: true,
+        images: true,
+        elevenlabs: false,
+        music: false,
+        capcut: false,
+        youtubeUpload: false,
+        publishDate: item.publishDate,
+        publishTime: '03:00',
+        publishStatus: 'draft',
+        notes: ''
+      });
+      addedNewBatch = true;
+    }
+  });
+
+  return addedNewBatch;
 }
 
 function loadState() {
@@ -108,7 +178,7 @@ function loadState() {
 
   if (!videos || videos.length === 0) {
     const base = new Date();
-    videos = INITIAL_VIDEOS.map((v, i) => {
+    videos = INITIAL_VIDEOS_1_TO_30.map((v, i) => {
       const d = new Date(base);
       d.setDate(d.getDate() + i);
       return {
@@ -124,14 +194,14 @@ function loadState() {
         capcut: v.capcut,
         youtubeUpload: v.youtubeUpload,
         publishDate: formatYMD(d),
-        publishTime: '19:00',
+        publishTime: '03:00',
         publishStatus: v.publishStatus,
         notes: ''
       };
     });
   }
 
-  ensureVideoFields();
+  ensureVideoFieldsAndBatch31To65();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
   syncDefaultTimeInput();
 }
@@ -140,7 +210,7 @@ function syncDefaultTimeInput() {
   const timeInput = document.getElementById('defaultTimeInput');
   if (!timeInput) return;
   const ch = getActiveChannelObj();
-  timeInput.value = ch.defaultTime || '19:00';
+  timeInput.value = ch.defaultTime || '03:00';
 }
 
 async function saveState() {
@@ -188,11 +258,13 @@ function initFirebaseRealtimeSync() {
         }
 
         if (data && Array.isArray(data.videos) && data.videos.length > 0) {
-          if (JSON.stringify(data.videos) !== JSON.stringify(videos)) {
-            videos = data.videos;
-            ensureVideoFields();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
-            changed = true;
+          videos = data.videos;
+          const addedBatch = ensureVideoFieldsAndBatch31To65();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+          changed = true;
+          if (addedBatch) {
+            // Kullanıcının 1-30 arası güncel bulut verilerinin üzerine 31-65 eklendi, buluta geri kaydet
+            saveState();
           }
         }
 
@@ -422,7 +494,7 @@ window.openModal = function(id) {
     document.getElementById('formYearEra').value = '';
     document.getElementById('formTitle').value = '';
     document.getElementById('formPublishDate').value = formatYMD(new Date());
-    document.getElementById('formPublishTime').value = chObj.defaultTime || '19:00';
+    document.getElementById('formPublishTime').value = chObj.defaultTime || '03:00';
     document.getElementById('formNotes').value = '';
     delBtn.style.display = 'none';
   } else {
@@ -435,7 +507,7 @@ window.openModal = function(id) {
     document.getElementById('formYearEra').value = v.yearEra || '';
     document.getElementById('formTitle').value = v.title || '';
     document.getElementById('formPublishDate').value = v.publishDate || '';
-    document.getElementById('formPublishTime').value = v.publishTime || '19:00';
+    document.getElementById('formPublishTime').value = v.publishTime || '03:00';
     document.getElementById('formNotes').value = v.notes || '';
     delBtn.style.display = 'inline-flex';
   }
@@ -454,13 +526,13 @@ function openChannelModal(isEdit) {
     document.getElementById('channelModalTitle').textContent = 'Kanalı Düzenle';
     document.getElementById('channelFormId').value = ch.id;
     document.getElementById('channelFormName').value = ch.name;
-    document.getElementById('channelFormTime').value = ch.defaultTime || '19:00';
+    document.getElementById('channelFormTime').value = ch.defaultTime || '03:00';
     delBtn.style.display = channels.length > 1 ? 'inline-flex' : 'none';
   } else {
     document.getElementById('channelModalTitle').textContent = 'Yeni Kanal Ekle';
     document.getElementById('channelFormId').value = '';
     document.getElementById('channelFormName').value = '';
-    document.getElementById('channelFormTime').value = '19:00';
+    document.getElementById('channelFormTime').value = '03:00';
     delBtn.style.display = 'none';
   }
   modal.classList.remove('hidden');
@@ -500,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('defaultTimeInput').addEventListener('change', e => {
-    const val = e.target.value || '19:00';
+    const val = e.target.value || '03:00';
     const ch = getActiveChannelObj();
     if (ch) ch.defaultTime = val;
     saveState();
@@ -508,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('autoScheduleBtn').addEventListener('click', () => {
     const ch = getActiveChannelObj();
-    const targetTime = (ch && ch.defaultTime) || document.getElementById('defaultTimeInput').value || '19:00';
+    const targetTime = (ch && ch.defaultTime) || document.getElementById('defaultTimeInput').value || '03:00';
     const targetList = getChannelVideos().sort((a, b) => a.number - b.number);
     const start = new Date();
     targetList.forEach((v, idx) => {
@@ -582,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const id = document.getElementById('channelFormId').value;
     const name = document.getElementById('channelFormName').value.trim();
-    const defaultTime = document.getElementById('channelFormTime').value || '19:00';
+    const defaultTime = document.getElementById('channelFormTime').value || '03:00';
     if (!name) return;
 
     if (id) {
@@ -632,13 +704,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const parsed = JSON.parse(ev.target.result);
         if (Array.isArray(parsed)) {
           videos = parsed;
-          ensureVideoFields();
+          ensureVideoFieldsAndBatch31To65();
         } else if (parsed && Array.isArray(parsed.videos)) {
           if (Array.isArray(parsed.channels) && parsed.channels.length > 0) {
             channels = parsed.channels;
           }
           videos = parsed.videos;
-          ensureVideoFields();
+          ensureVideoFieldsAndBatch31To65();
         }
         renderAll();
         saveState();
