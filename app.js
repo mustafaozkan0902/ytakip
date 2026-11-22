@@ -205,6 +205,7 @@ let activeChannelId = 'ch_retroshift';
 let videos = [];
 let currentFilter = 'all';
 let searchQuery = '';
+let sortAsc = true;
 
 function formatYMD(d) {
   const y = d.getFullYear();
@@ -540,7 +541,7 @@ function renderTable() {
       if (currentFilter === 'done') return isRowDone(v);
       return true;
     })
-    .sort((a, b) => a.number - b.number);
+    .sort((a, b) => sortAsc ? a.number - b.number : b.number - a.number);
 
   if (filtered.length === 0) {
     tbody.innerHTML = `
@@ -557,7 +558,7 @@ function renderTable() {
     const done = isRowDone(v);
     const showChannelBadge = activeChannelId === 'all';
     return `
-      <tr class="${done ? 'row-done' : ''}">
+      <tr id="row_${v.id}" class="${done ? 'row-done' : ''}">
         <td class="col-no">#${v.number}</td>
         <td class="col-title">
           <div class="video-main-title">${escapeHtml(v.title)}</div>
@@ -723,6 +724,34 @@ document.addEventListener('DOMContentLoaded', () => {
     searchQuery = e.target.value.trim();
     renderTable();
   });
+
+  const toggleSort = () => {
+    sortAsc = !sortAsc;
+    const lbl = document.getElementById('sortDirLabel');
+    if (lbl) lbl.textContent = sortAsc ? '1 → Son' : 'Son → 1';
+    renderTable();
+  };
+
+  const sortBtn = document.getElementById('sortToggleBtn');
+  if (sortBtn) sortBtn.addEventListener('click', toggleSort);
+  const thSortNo = document.getElementById('thSortNo');
+  if (thSortNo) thSortNo.addEventListener('click', toggleSort);
+
+  const jumpBtn = document.getElementById('jumpNextBtn');
+  if (jumpBtn) {
+    jumpBtn.addEventListener('click', () => {
+      const list = getChannelVideos().sort((a, b) => a.number - b.number);
+      const nextIncomplete = list.find(v => !isRowDone(v));
+      if (!nextIncomplete) return;
+      const rowEl = document.getElementById('row_' + nextIncomplete.id);
+      if (rowEl) {
+        rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        rowEl.classList.remove('row-highlight');
+        void rowEl.offsetWidth;
+        rowEl.classList.add('row-highlight');
+      }
+    });
+  }
 
   document.getElementById('defaultTimeInput').addEventListener('change', e => {
     const val = e.target.value || '03:00';
