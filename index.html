@@ -11,67 +11,75 @@
 </head>
 <body>
   <div class="container">
-    <!-- SADE ÜST BAR -->
-    <header class="header">
-      <div class="header-left">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <h1>🎬 YouTube Kanal & Video Takip</h1>
-          <span id="cloudStatusBadge" class="cloud-badge">☁️ Bulut Bağlanıyor...</span>
+    <!-- SABİT ÜST BÖLÜM (KAYDIRINCA KAYBOLMAZ) -->
+    <div class="frozen-top-area">
+      <!-- SADE ÜST BAR -->
+      <header class="header">
+        <div class="header-left">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h1>🎬 YouTube Kanal & Video Takip</h1>
+            <span id="cloudStatusBadge" class="cloud-badge">☁️ Bulut Bağlanıyor...</span>
+          </div>
         </div>
-        <span class="subtitle">Çoklu Kanal Yönetimi • Her Gün 1 Video • Firebase Gerçek Zamanlı Senkronize</span>
-      </div>
-      <div class="header-right">
-        <div class="default-time-box" title="Seçili kanalın günlük varsayılan yayın saati">
-          <span>Yayın Saati:</span>
-          <input type="time" id="defaultTimeInput" value="03:00" class="inline-input" />
+        <div class="header-right">
+          <div class="default-time-box" title="Seçili kanalın günlük varsayılan yayın saati">
+            <span>Yayın Saati:</span>
+            <input type="time" id="defaultTimeInput" value="03:00" class="inline-input" />
+          </div>
+          <button class="btn" id="autoScheduleBtn" title="Seçili kanaldaki videoları bugünden başlayarak her güne 1 video düşecek şekilde sırayla tarihlendirir">
+            📅 Otomatik Tarihle
+          </button>
+          <button class="btn" id="exportBtn">⬇️ Yedek Al</button>
+          <label class="btn">
+            ⬆️ Yedek Yükle
+            <input type="file" id="importInput" accept=".json" hidden />
+          </label>
+          <button class="btn btn-primary" id="addVideoBtn">+ Yeni Video</button>
         </div>
-        <button class="btn" id="autoScheduleBtn" title="Seçili kanaldaki videoları bugünden başlayarak her güne 1 video düşecek şekilde sırayla tarihlendirir">
-          📅 Her Güne 1 Video Tarihle
-        </button>
-        <button class="btn" id="exportBtn">⬇️ Yedek Al</button>
-        <label class="btn">
-          ⬆️ Yedek Yükle
-          <input type="file" id="importInput" accept=".json" hidden />
-        </label>
-        <button class="btn btn-primary" id="addVideoBtn">+ Yeni Video</button>
-      </div>
-    </header>
+      </header>
 
-    <!-- ÜST KANAL SEÇİM BARI -->
-    <section class="channel-bar">
-      <div class="channel-tabs" id="channelTabs"></div>
-      <div class="channel-actions">
-        <button class="btn btn-sm" id="editChannelBtn" title="Seçili kanalın adını düzenle veya sil">⚙️ Kanalı Düzenle</button>
-        <button class="btn btn-sm btn-channel-add" id="addChannelBtn">+ Yeni Kanal Ekle</button>
-      </div>
-    </section>
+      <!-- ÜST KANAL SEÇİM BARI + ÖZET SAYILAR -->
+      <section class="channel-bar">
+        <div class="channel-tabs" id="channelTabs"></div>
+        <div class="channel-actions">
+          <button class="btn btn-sm" id="editChannelBtn" title="Seçili kanalın adını düzenle veya sil">⚙️ Kanalı Düzenle</button>
+          <button class="btn btn-sm btn-channel-add" id="addChannelBtn">+ Yeni Kanal Ekle</button>
+        </div>
+      </section>
 
-    <!-- BÜYÜK RESİM ÖZET BAR -->
-    <section class="summary-bar" id="summaryBar"></section>
+      <!-- BÜYÜK RESİM ÖZET BAR -->
+      <section class="summary-bar" id="summaryBar"></section>
 
-    <!-- HIZLI FİLTRE SEKMELERİ -->
-    <section class="toolbar">
-      <div class="filter-pills" id="filterPills">
-        <button class="pill active" data-filter="all">Tümü</button>
-        <button class="pill" data-filter="incomplete">⏳ Eksikleri Olanlar</button>
-        <button class="pill" data-filter="missing_images">🖼️ Görsel Bekleyen</button>
-        <button class="pill" data-filter="missing_elevenlabs">🎙️ ElevenLabs Bekleyen</button>
-        <button class="pill" data-filter="missing_music">🎵 Müzik Bekleyen</button>
-        <button class="pill" data-filter="missing_capcut">✂️ CapCut Bekleyen</button>
-        <button class="pill" data-filter="missing_upload">📤 Yükleme Bekleyen</button>
-        <button class="pill" data-filter="done">✅ Tamamlananlar</button>
-      </div>
-      <div class="toolbar-right">
-        <input type="text" id="searchInput" class="search-input" placeholder="Video ara..." />
-      </div>
-    </section>
+      <!-- HIZLI FİLTRE SEKMELERİ VE SIRADAKİNE GİT -->
+      <section class="toolbar">
+        <div class="filter-pills" id="filterPills">
+          <button class="pill active" data-filter="all">Tümü</button>
+          <button class="pill" data-filter="incomplete">⏳ Sadece Eksikleri Olanlar</button>
+          <button class="pill" data-filter="missing_images">🖼️ Görsel Bekleyen</button>
+          <button class="pill" data-filter="missing_elevenlabs">🎙️ ElevenLabs Bekleyen</button>
+          <button class="pill" data-filter="missing_music">🎵 Müzik Bekleyen</button>
+          <button class="pill" data-filter="missing_capcut">✂️ CapCut Bekleyen</button>
+          <button class="pill" data-filter="missing_upload">📤 Yükleme Bekleyen</button>
+          <button class="pill" data-filter="done">✅ Tamamlananlar</button>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-sm btn-jump" id="jumpNextBtn" title="Tamamlanmamış ilk videoya otomatik kaydırır">
+            🎯 Sıradaki Eksik Videoya Git
+          </button>
+          <button class="btn btn-sm" id="sortToggleBtn" title="Sıralamayı ters çevir (1→65 / 65→1)">
+            ⇅ No: <span id="sortDirLabel">1 → Son</span>
+          </button>
+          <input type="text" id="searchInput" class="search-input" placeholder="Video no veya konu ara..." />
+        </div>
+      </section>
+    </div>
 
-    <!-- ANA BÜYÜK RESİM TABLOSU -->
-    <div class="table-wrapper">
+    <!-- ANA BÜYÜK RESİM TABLOSU (BAŞLIKLARI DONDURULMUŞ KAYDIRILABİLİR ALAN) -->
+    <div class="table-wrapper" id="tableWrapper">
       <table class="tracker-table">
         <thead>
           <tr>
-            <th class="col-no">No</th>
+            <th class="col-no" id="thSortNo" style="cursor:pointer;" title="Sıralamayı değiştirmek için tıklayın">No ⇅</th>
             <th class="col-title">Video Konusu / Başlık</th>
             <th class="col-check">📝 Senaryo<br><small>Metin Hazır mı?</small></th>
             <th class="col-check">🖼️ Görseller<br><small>Oluşturuldu mu?</small></th>
@@ -79,7 +87,7 @@
             <th class="col-check">🎵 YT Müzik<br><small>İndirildi mi?</small></th>
             <th class="col-check">✂️ CapCut<br><small>Bitti mi?</small></th>
             <th class="col-check">📤 YouTube<br><small>Yüklendi mi?</small></th>
-            <th class="col-date">📅 Yayın Günü & Saati<br><small>Her Gün 1 Video</small></th>
+            <th class="col-date">📅 Yayın Günü & Saati<br><small>Planlanan Tarih</small></th>
             <th class="col-status">Durum</th>
             <th class="col-action"></th>
           </tr>
@@ -109,8 +117,8 @@
           </div>
         </div>
         <div class="field">
-          <label>Kısa Dönem / Klasör</label>
-          <input type="text" id="formYearEra" placeholder="Örn: 1969 Apollo 11" />
+          <label>Kısa Dönem / Türkçe Konu Başlığı</label>
+          <input type="text" id="formYearEra" placeholder="Örn: 1969 Apollo 11 / Voynich El Yazması..." />
         </div>
         <div class="field">
           <label>Video Başlığı</label>
@@ -152,11 +160,11 @@
         <input type="hidden" id="channelFormId" />
         <div class="field">
           <label>Kanal Adı</label>
-          <input type="text" id="channelFormName" required placeholder="Örn: Retro Shift / 2. Kanalım" />
+          <input type="text" id="channelFormName" required placeholder="Örn: Retro Shift / Akte_Vergange" />
         </div>
         <div class="field">
           <label>Varsayılan Günlük Yayın Saati</label>
-          <input type="time" id="channelFormTime" value="19:00" />
+          <input type="time" id="channelFormTime" value="03:00" />
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-danger" id="deleteChannelBtn">Kanalı Sil</button>
