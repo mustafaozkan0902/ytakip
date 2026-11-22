@@ -167,6 +167,36 @@ const AKTE_VIDEOS_7_TO_20 = [
     publishDate: '2027-03-21',
     yearEra: "Paris'in Unutulmuş Yeraltı Mezarları: 6 Milyon Ölünün İmparatorluğu",
     title: 'Die vergessenen Katakomben von Paris: Das Reich der 6 Millionen Toten'
+  },
+  {
+    number: 21,
+    publishDate: '2027-03-28',
+    yearEra: 'Dyatlov Geçidi Vakası (1959): 9 Öğrenciyi -30 Derecede Çıplak Ölüme Ne Sürükledi?',
+    title: 'Das Dyatlov-Pass-Unglück (1959): Was trieb 9 Studenten nackt in den Tod?'
+  },
+  {
+    number: 22,
+    publishDate: '2027-04-04',
+    yearEra: "Antik Mısır'da Neden 24 Saat Bile Hayatta Kalamazdın?",
+    title: 'Warum du keine 24 Stunden im Alten Ägypten überleben würdest'
+  },
+  {
+    number: 23,
+    publishDate: '2027-04-11',
+    yearEra: 'Hayalet Gemi Mary Celeste (1872): Mürettebat Neden Sağlam Gemiyi Terk Etti?',
+    title: 'Das Geisterschiff Mary Celeste (1872): Warum verließen alle fluchtartig das Schiff?'
+  },
+  {
+    number: 24,
+    publishDate: '2027-04-18',
+    yearEra: 'Kaspar Hauser Vakası (1828): 16 Yıl Karanlık Hücrede Tutulan Genç ve 2024 DNA Şoku',
+    title: 'Der Fall Kaspar Hauser: Das rätselhafteste Findelkind der deutschen Geschichte'
+  },
+  {
+    number: 25,
+    publishDate: '2027-04-25',
+    yearEra: 'Hameln / Fareli Köyün Kavalcısı (1284): Kaybolan 130 Çocuğa Gerçekte Ne Oldu?',
+    title: 'Der Rattenfänger von Hameln (1284): Was geschah wirklich mit den 130 Kindern?'
   }
 ];
 
