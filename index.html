@@ -10,7 +10,33 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
+  <!-- GİRİŞ ŞİFRE EKRANI -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-icon">🔒</div>
+      <h2>YouTube Kanal Takip</h2>
+      <p>Tabloyu görüntülemek için giriş şifrenizi girin</p>
+      <form id="authForm">
+        <input
+          type="password"
+          id="authPasswordInput"
+          class="auth-input"
+          placeholder="Şifre..."
+          autocomplete="current-password"
+          required
+        />
+        <label class="auth-remember">
+          <input type="checkbox" id="authRememberChk" checked />
+          <span>Bu cihazda beni hatırla</span>
+        </label>
+        <div id="authErrorMsg" class="auth-error hidden">❌ Hatalı şifre, lütfen tekrar deneyin.</div>
+        <button type="submit" class="btn btn-primary auth-submit-btn">Giriş Yap →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ANA UYGULAMA (ŞİFRE DOĞRULANINCA AÇILIR) -->
+  <div class="container hidden" id="appContainer">
     <!-- SABİT ÜST BÖLÜM (KAYDIRINCA KAYBOLMAZ) -->
     <div class="frozen-top-area">
       <!-- SADE ÜST BAR -->
@@ -35,6 +61,7 @@
             <input type="file" id="importInput" accept=".json" hidden />
           </label>
           <button class="btn btn-primary" id="addVideoBtn">+ Yeni Video</button>
+          <button class="btn" id="lockAppBtn" title="Oturumu kapat ve ekranı kilitle">🔒 Kilitle</button>
         </div>
       </header>
 
