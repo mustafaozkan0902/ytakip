@@ -3,7 +3,62 @@ import { db, isFirebaseInitialized, doc, setDoc, onSnapshot } from './firebase-c
 const STORAGE_KEY = 'retroshift_youtube_tracker_multichannel_v1';
 const CHANNELS_STORAGE_KEY = 'retroshift_youtube_channels_v1';
 const ACTIVE_CHANNEL_KEY = 'retroshift_youtube_active_channel_v1';
+const AUTH_STORAGE_KEY = 'ytakip_auth_token_v1';
+const EXPECTED_AUTH_HASH = '6e5f59abdf8a7953a2ea21fa07bde40e11301df9eed8048ae7bd3aab58ef770d';
 const FIRESTORE_DOC_ID = 'youtube_video_takip';
+
+async function sha256Hex(message) {
+  if (window.crypto && window.crypto.subtle) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  // Fallback pure-JS SHA-256 for file:// contexts without crypto.subtle
+  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+  const mathPow = Math.pow, maxWord = mathPow(2, 32);
+  let result = '';
+  const words = [], asciiBitLength = message.length * 8;
+  let hash = [], k = [];
+  let primeCounter = 0;
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  message += '\x80';
+  while ((message.length % 64) - 56) message += '\x00';
+  for (let i = 0; i < message.length; i++) {
+    const j = message.charCodeAt(i);
+    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+  }
+  words[words.length] = (asciiBitLength / maxWord) | 0;
+  words[words.length] = asciiBitLength;
+  for (let j = 0; j < words.length;) {
+    const w = words.slice(j, (j += 16)), oldHash = hash.slice(0);
+    for (let i = 0; i < 64; i++) {
+      const w15 = w[i - 15], w2 = w[i - 2];
+      const a = hash[0], e = hash[4];
+      const temp1 = hash[7] + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) + ((e & hash[5]) ^ (~e & hash[6])) + k[i] +
+        (w[i] = i < 16 ? w[i] : (w[i - 16] + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) | 0);
+      const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.pop();
+    }
+    for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (let i = 0; i < 8; i++) {
+    for (let j = 3; j + 1; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += (b < 16 ? '0' : '') + b.toString(16);
+    }
+  }
+  return result;
+}
 
 const DEFAULT_CHANNELS = [
   { id: 'ch_retroshift', name: 'Retro Shift', defaultTime: '03:00' },
@@ -706,10 +761,61 @@ function renderAll() {
   renderTable();
 }
 
+let appStarted = false;
+
+function startMainApp() {
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('appContainer').classList.remove('hidden');
+  if (!appStarted) {
+    appStarted = true;
+    loadState();
+    renderAll();
+    initFirebaseRealtimeSync();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  loadState();
-  renderAll();
-  initFirebaseRealtimeSync();
+  const savedHash = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
+  if (savedHash === EXPECTED_AUTH_HASH) {
+    startMainApp();
+  } else {
+    const pwdInput = document.getElementById('authPasswordInput');
+    if (pwdInput) pwdInput.focus();
+  }
+
+  document.getElementById('authForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const pwd = document.getElementById('authPasswordInput').value.trim();
+    const remember = document.getElementById('authRememberChk').checked;
+    const errEl = document.getElementById('authErrorMsg');
+
+    const inputHash = await sha256Hex(pwd);
+    if (inputHash === EXPECTED_AUTH_HASH) {
+      errEl.classList.add('hidden');
+      if (remember) {
+        localStorage.setItem(AUTH_STORAGE_KEY, inputHash);
+      } else {
+        sessionStorage.setItem(AUTH_STORAGE_KEY, inputHash);
+      }
+      document.getElementById('authPasswordInput').value = '';
+      startMainApp();
+    } else {
+      errEl.classList.remove('hidden');
+      document.getElementById('authPasswordInput').select();
+    }
+  });
+
+  const lockBtn = document.getElementById('lockAppBtn');
+  if (lockBtn) {
+    lockBtn.addEventListener('click', () => {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('authOverlay').classList.remove('hidden');
+      const pwdInput = document.getElementById('authPasswordInput');
+      if (pwdInput) pwdInput.focus();
+    });
+  }
 
   document.querySelectorAll('#filterPills .pill').forEach(btn => {
     btn.addEventListener('click', () => {
